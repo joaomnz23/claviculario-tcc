@@ -9,6 +9,7 @@ let returning = new Set();   // chaves que estavam com a pessoa durante a devolu
 let rendered = '';
 let version = 0;             // descarta respostas de consultas antigas
 let busy = false;
+let closing = false;         // pediu para encerrar com a porta aberta
 let lastActivity = 0;
 let messageTimer;
 
@@ -124,6 +125,11 @@ function view() {
     const { session, keys } = state;
     const me = session.user.id;
 
+    // Com a porta aberta, só o cartão encerra; a tela recarrega quando a sessão termina.
+    if (closing && session.door === 'open') {
+        return '<div class="center"><div class="pulse"></div><h1>Aproxime o cartão para validar o encerramento</h1><p>A porta será fechada após a leitura.</p><button data-action="back">Voltar</button></div>';
+    }
+
     if (!session.mode) {
         return `<div class="center"><h1>O que você quer fazer?</h1><div class="choices"><button class="primary" data-mode="withdraw">Retirar<small>Pegar chaves</small></button><button data-mode="return">Devolver<small>Guardar chaves</small></button></div></div><div class="actions">${END}</div>`;
     }
@@ -144,7 +150,7 @@ function view() {
             if (!k.present) return keyCard(k, { cls: asked ? 'done' : '', status: asked ? '✓ Retirada' : 'Retirada (não estava selecionada)', tone: asked ? 'ok' : 'warn' });
             return keyCard(k, asked ? { cls: 'selected', status: 'Pegue esta chave', tone: 'warn' } : { status: 'No claviculário' });
         });
-        return head('Porta aberta: pegue suas chaves', 'Ao terminar, toque em Encerrar ou passe o cartão.')
+        return head('Porta aberta: pegue suas chaves', 'Ao terminar, toque em Encerrar e aproxime o cartão.')
             + `<div class="grid">${cards.join('')}</div><div class="actions"><button data-mode="withdraw">Escolher outras</button><button data-mode="return">Devolver</button>${END}</div>`;
     }
 
@@ -194,7 +200,11 @@ document.addEventListener('click', event => {
         selected.clear();
         send('/api/totem/mode', { mode });
     } else if (action === 'take') send('/api/totem/take', { key_ids: [...selected] });
-    else if (action === 'end') send('/api/totem/end');
+    else if (action === 'back') { closing = false; render(); }
+    else if (action === 'end') {
+        if (state.session.door === 'open') { closing = true; render(); }
+        else send('/api/totem/end');
+    }
 });
 document.addEventListener('contextmenu', event => event.preventDefault());
 
