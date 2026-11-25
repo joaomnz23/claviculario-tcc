@@ -1,0 +1,290 @@
+:root {
+    --red: #e31837;
+    --green: #39c58a;
+    --amber: #efb85c;
+    --card: #17191b;
+    --border: #33373b;
+    --muted: #a9afb5
+}
+
+* {
+    box-sizing: border-box
+}
+
+[hidden] {
+    display: none !important
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #fff;
+    background: #050606;
+    user-select: none;
+    touch-action: manipulation
+}
+
+body.idle {
+    background: #000
+}
+
+header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 32px
+}
+
+header img {
+    width: 120px
+}
+
+header strong {
+    font-size: 13px;
+    letter-spacing: 1.3px
+}
+
+header span {
+    margin-left: auto;
+    font-size: 20px;
+    font-weight: 700
+}
+
+body.idle header {
+    opacity: .35
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: min(100%, 1100px);
+    margin: auto;
+    padding: 8px 32px 32px
+}
+
+.center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 18px
+}
+
+h1 {
+    font-size: 34px;
+    margin: 0
+}
+
+p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 17px
+}
+
+.pulse {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: pulse 2s infinite
+}
+
+@keyframes pulse {
+    50% {
+        opacity: .2;
+        transform: scale(.7)
+    }
+}
+
+button {
+    font: inherit;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--card);
+    min-height: 64px;
+    padding: 0 28px;
+    font-size: 18px
+}
+
+button:disabled {
+    cursor: default;
+    opacity: .45
+}
+
+button.primary {
+    background: var(--red);
+    border-color: var(--red)
+}
+
+.choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 100%
+}
+
+.choices button {
+    min-height: 220px;
+    font-size: 36px
+}
+
+.choices small {
+    display: block;
+    margin-top: 10px;
+    font-size: 16px;
+    color: var(--muted);
+    font-weight: 400
+}
+
+.choices .primary small {
+    color: #fff
+}
+
+.head {
+    margin-bottom: 20px;
+    display: grid;
+    gap: 6px
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 16px;
+    align-content: start
+}
+
+.key {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    text-align: left;
+    padding: 20px;
+    min-height: 160px;
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    background: var(--card)
+}
+
+.key b {
+    font-size: 28px
+}
+
+.key span {
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 400
+}
+
+.key em {
+    font-style: normal;
+    font-size: 14px;
+    margin-top: auto
+}
+
+.key.selected {
+    border-color: var(--red);
+    background: #391b27
+}
+
+.key.done {
+    border-color: var(--green)
+}
+
+.ok {
+    color: var(--green)
+}
+
+.warn {
+    color: var(--amber)
+}
+
+.bad {
+    color: #ff6b7f
+}
+
+.actions {
+    display: flex;
+    gap: 14px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: 24px
+}
+
+#offline,
+#message {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 14px 22px;
+    border-radius: 10px;
+    background: #7d1023;
+    font-weight: 700;
+    z-index: 3
+}
+
+#offline {
+    top: 8px
+}
+
+#message {
+    bottom: 112px
+}
+
+#countdown {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: #000d;
+    z-index: 2;
+    font-size: 24px
+}
+
+#countdown b {
+    font-size: 96px;
+    color: var(--red)
+}
+
+form {
+    display: grid;
+    gap: 14px;
+    width: min(100%, 420px)
+}
+
+input {
+    height: 58px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #252729;
+    color: #fff;
+    padding: 0 16px;
+    font-size: 18px
+}
+
+@media(max-width:640px) {
+    .choices {
+        grid-template-columns: 1fr
+    }
+
+    .choices button {
+        min-height: 140px
+    }
+
+    header strong {
+        display: none
+    }
+}

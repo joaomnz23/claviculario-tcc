@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#06172b">
+  <title>Claviculário | SENAI</title>
+  <link rel="stylesheet" href="styles.css?v=responsive1">
+</head>
+<body>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
+      <div class="brand"><div><img class="brand-logo" src="senai-logo.png" alt="SENAI"><span>Claviculário</span></div></div>
+      <div class="side-label">MENU PRINCIPAL</div>
+      <nav id="nav">
+        <button class="nav-item active" data-page="available"><span class="nav-icon">⌕</span><span>Chaves disponíveis</span><span class="nav-count" id="availableCount">20</span></button>
+        <button class="nav-item admin-only" data-page="keys" data-admin-only><span class="nav-icon">⚿</span><span>Chaves</span></button>
+        <button class="nav-item admin-only" data-page="users" data-admin-only><span class="nav-icon">♙</span><span>Usuários</span></button>
+        <button class="nav-item" data-page="reserved"><span class="nav-icon">▤</span><span>Chaves reservadas</span><span class="nav-count" id="reservedCount">0</span></button>
+        <button class="nav-item" data-page="mine"><span class="nav-icon">♙</span><span>Minhas chaves</span></button>
+        <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span><span>Configurações</span></button>
+      </nav>
+    </aside>
+    <div class="sidebar-scrim" id="scrim"></div>
+    <main class="main-area">
+      <header class="topbar">
+        <button class="icon-button menu-button" id="menuButton" aria-label="Abrir menu">☰</button>
+        <div class="topbar-title"><span class="eyebrow">SENAI · AUTOATENDIMENTO</span><strong>Claviculário inteligente</strong></div>
+        <div class="topbar-actions"><span class="api-status" id="apiStatus">Conectando à API</span><button class="icon-button" id="refreshButton" aria-label="Atualizar dados" title="Atualizar dados">↻</button><button class="icon-button theme-toggle" id="themeToggle" aria-label="Alternar tema" title="Alternar tema">☼</button><button class="logout-button" id="logoutButton">Sair</button></div>
+      </header>
+      <div class="content" id="content"></div>
+    </main>
+  </div>
+  <div class="modal-layer" id="modalLayer" aria-hidden="true"></div>
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+  <script src="api-config.js?v=api2"></script>
+  <script src="app.js?v=keycrud2"></script>
+</body>
+</html>
