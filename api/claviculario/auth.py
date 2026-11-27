@@ -39,8 +39,11 @@ def login():
     user = User.query.filter_by(email=(data.get("email") or "").lower().strip()).first()
     # Um login só é aceito se a conta existe, está ativa e a senha confere.
     # A senha recebida é comparada ao hash armazenado, nunca descriptografada.
-    if not user or not user.active or not check_password_hash(user.password_hash, data.get("password") or ""):
+    if not user or not check_password_hash(user.password_hash, data.get("password") or ""):
         return fail("E-mail ou senha inválidos.", 401)
+    # Só revela que a conta está desativada a quem acertou a senha.
+    if not user.active:
+        return fail("Usuário desativado. Procure o administrador.", 403)
     # O token representa o login; o navegador o envia nas próximas requisições.
     token = create_access_token(identity=str(user.id), additional_claims={"role": user.role})
     # jsonify transforma dicionários Python em uma resposta HTTP JSON.

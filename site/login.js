@@ -12,6 +12,11 @@
   const loginCard = document.querySelector('.login-card');
   const apiBase = (window.API_BASE_URL || '').trim().replace(/\/$/, '');
   let email = '';
+  // Já logado: vai direto para o destino certo.
+  try {
+    const saved = JSON.parse(sessionStorage.getItem('claviculario-user') || 'null');
+    if (sessionStorage.getItem('claviculario-token') && saved) window.location.replace(saved.role === 'admin' ? 'index.html#painel' : 'index.html');
+  } catch { /* Segue para o login. */ }
 
   function applyTheme(theme) {
     const light = theme === 'light';
@@ -80,7 +85,7 @@
       if (!response.ok) throw new Error(result.error || 'Não foi possível entrar. Confira seus dados.');
       sessionStorage.setItem('claviculario-token', result.access_token);
       sessionStorage.setItem('claviculario-user', JSON.stringify(result.user));
-      window.location.href = 'index.html';
+      window.location.href = result.user.role === 'admin' ? 'index.html#painel' : 'index.html';
     } catch (error) {
       note.textContent = error instanceof TypeError
         ? `Não foi possível concluir a conexão com ${apiBase}. Confira se a API está acessível e se o CORS permite ${window.location.origin}. O navegador pode bloquear o POST se o preflight OPTIONS falhar.`

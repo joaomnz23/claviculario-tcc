@@ -1,17 +1,25 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#151617">
   <title>Acesso | Claviculário SENAI</title>
-  <link rel="stylesheet" href="login.css?v=responsive1">
+  <link rel="stylesheet" href="login.css?v=perf1">
 </head>
+
 <body>
   <section class="login-screen" id="loginScreen" aria-label="Acesso ao claviculário">
     <header class="login-header">
-      <div class="login-brand"><img src="senai-logo.png" alt="SENAI"><span></span><strong>CLAVICULÁRIO<br>INTELIGENTE</strong></div>
-      <div class="login-header-actions"><div class="login-mark" aria-hidden="true">SENAI <b>·</b> AUTOATENDIMENTO</div><div class="login-theme-options" role="group" aria-label="Tema da tela"><button class="login-theme-option" type="button" data-login-theme="light">☼ Claro</button><button class="login-theme-option" type="button" data-login-theme="dark">☾ Escuro</button></div></div>
+      <div class="login-brand"><img src="senai-logo.png"
+          alt="SENAI"><span></span><strong>CLAVICULÁRIO<br>INTELIGENTE</strong></div>
+      <div class="login-header-actions">
+        <div class="login-mark" aria-hidden="true">SENAI <b>·</b> AUTOATENDIMENTO</div>
+        <div class="login-theme-options" role="group" aria-label="Tema da tela"><button class="login-theme-option"
+            type="button" data-login-theme="light">☼ Claro</button><button class="login-theme-option" type="button"
+            data-login-theme="dark">☾ Escuro</button></div>
+      </div>
     </header>
     <div class="login-content">
       <form class="login-card" id="loginForm">
@@ -20,11 +28,13 @@
         <p class="login-description" id="loginDescription">Entre com seus dados para acessar o claviculário.</p>
         <div class="login-step" id="identityStep">
           <label for="loginIdentity">E-mail</label>
-          <input id="loginIdentity" class="login-select" type="email" placeholder="Insira seu e-mail cadastrado" autocomplete="username" required>
+          <input id="loginIdentity" class="login-select" type="email" placeholder="Insira seu e-mail cadastrado"
+            autocomplete="username" required>
         </div>
         <div class="login-step" id="passwordStep" hidden>
           <label for="loginPassword">Senha</label>
-          <input id="loginPassword" class="login-select" type="password" placeholder="Insira sua senha" autocomplete="current-password">
+          <input id="loginPassword" class="login-select" type="password" placeholder="Insira sua senha"
+            autocomplete="current-password">
           <button class="login-back" type="button" id="loginBack">← Voltar</button>
         </div>
         <button class="login-submit" id="loginSubmit" type="submit">Avançar <span aria-hidden="true">→</span></button>
@@ -32,9 +42,12 @@
       </form>
     </div>
     <footer class="login-footer">SENAI <span>·</span> Claviculário inteligente</footer>
-    <div class="login-cube cube-one" aria-hidden="true"></div><div class="login-cube cube-two" aria-hidden="true"></div><div class="login-cube cube-three" aria-hidden="true"></div>
+    <div class="login-cube cube-one" aria-hidden="true"></div>
+    <div class="login-cube cube-two" aria-hidden="true"></div>
+    <div class="login-cube cube-three" aria-hidden="true"></div>
   </section>
-<script src="api-config.js?v=api2"></script>
-<script src="login.js?v=cors1"></script>
+  <script src="api-config.js?v=api2"></script>
+  <script src="login.js?v=painel1"></script>
 </body>
+
 </html>

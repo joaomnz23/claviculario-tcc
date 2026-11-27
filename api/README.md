@@ -5,7 +5,8 @@ Este projeto é a parte do servidor de um claviculário de chaves. A API recebe 
 ## Visão geral
 
 - **Site**: autentica uma pessoa com e-mail e senha; consulta chaves, reservas e empréstimos.
-- **ESP32**: autentica o dispositivo com um token secreto; envia o UID do cartão RFID e as chaves retiradas/devolvidas.
+- **ESP32**: autentica o dispositivo com um token secreto; envia o cartão RFID e as mudanças dos sensores (reeds), e consulta comandos (porta e LEDs).
+- **Totem**: tela física que usa o token do terminal; mostra a sessão aberta pelo cartão.
 - **API Flask**: confere os dados, identifica o usuário pelo cartão e atualiza o banco.
 - **MySQL**: mantém usuários, chaves, reservas, eventos do dispositivo e empréstimos.
 
@@ -22,7 +23,8 @@ O ESP32 não precisa conhecer a senha do usuário. Ele lê o cartão e envia seu
 | `claviculario/keys.py` | Cadastro e consulta de chaves. |
 | `claviculario/reservations.py` | Criação, consulta e cancelamento de reservas. |
 | `claviculario/loans.py` | Consulta dos empréstimos. |
-| `claviculario/device.py` | Recebimento dos eventos RFID enviados pelo ESP32. |
+| `claviculario/device.py` | Endpoint antigo de eventos RFID do ESP32 (`/api/device/events`), mantido por compatibilidade. |
+| `claviculario/hardware.py` | Sessão física, reeds, porta, LEDs, rotas do totem, estado das chaves e histórico dos sensores. |
 | `claviculario/extensions.py` e `utils.py` | Extensões compartilhadas e funções auxiliares. |
 | `schema.sql` | Criação manual das tabelas no MySQL. |
 | `requirements.txt` | Bibliotecas Python necessárias. |
@@ -59,11 +61,21 @@ Recomendado: Python 3.11 ou mais recente e MySQL 8 ou mais recente.
    flask --app app init-db
    ```
 
-7. Para desenvolvimento na rede local, inicie a API:
+7. Para teste rápido no Windows, sem MySQL (CMD, na pasta `api`):
+
+   ```
+   set DATABASE_URL=sqlite:///claviculario.db
+   flask --app app init-db
+   flask --app app run --host 0.0.0.0 --port 5000
+   ```
+
+   O `set` vale só para aquela janela do CMD. Para desenvolvimento na rede local, inicie a API:
 
    ```sh
    flask --app app run --host 0.0.0.0 --port 5000
    ```
+
+Variáveis do `.env`: `FLASK_SECRET_KEY`, `JWT_SECRET_KEY`, `JWT_ACCESS_TOKEN_MINUTES`, `DATABASE_URL`, `CORS_ORIGINS`, `DEVICE_TOKEN` (ESP32), `TERMINAL_TOKEN` (totem), `SESSION_TIMEOUT_SECONDS` (inatividade da sessão física, padrão 60 s) e os dados do administrador inicial.
 
 O padrão de desenvolvimento usa SQLite se `DATABASE_URL` não estiver definida. Para o Raspberry Pi, configure a URL MySQL antes de inicializar. Por exemplo:
 
@@ -154,7 +166,11 @@ O cartão é cadastrado junto ao usuário. Exemplo do corpo de criação de usu�
 
 ### Chaves e estado atual
 
-O cadastro administrativo de chave recebe `code` e `name`; `description` e `sensor_id` são opcionais. A rota de consulta usa os empréstimos ainda abertos para informar `available` e `holder_user_id`.
+O cadastro administrativo de chave recebe `code` e `name`; `description` e `sensor_id` são opcionais. `GET /api/keys` informa só `available` e `holder_user_id` (considera apenas empréstimos).
+
+O estado completo vem de `GET /api/keys/status` (qualquer usuário autenticado): para cada chave, `present` (sensor), `holder` (quem está com ela e desde quando), `reservation` (quem reservou, início, fim e `now`), `unauthorized` (saiu sem sessão), `available`, `reserved_for_me`. Uma reserva "vale agora" se já começou ou começa em até 60 minutos. O site usa essa rota.
+
+Atenção: o `sensor_id` de cada chave precisa ser `"1"`, `"2"`, `"3"` ou `"4"`, igual ao número do reed/LED no firmware.
 
 ### Reservas
 
@@ -190,6 +206,8 @@ O `event_id` é criado pelo ESP32 para cada leitura/operação e deve ser mantid
 
 ## Rotas disponíveis
 
+As rotas do totem, do ESP32 (sessão) e do estado das chaves estão na seção seguinte, "Totem, sessão física e sensores".
+
 | Método | Rota | Quem pode usar | Função |
 |---|---|---|---|
 | `GET` | `/health` | qualquer cliente | Confirma que a API está respondendo. |
@@ -206,8 +224,8 @@ O `event_id` é criado pelo ESP32 para cada leitura/operação e deve ser mantid
 | `GET` | `/api/reservations` | usuário autenticado | Lista reservas; aceita `from`, `to`, `key_id`. |
 | `POST` | `/api/reservations` | usuário autenticado | Cria reserva. |
 | `DELETE` | `/api/reservations/{id}` | dono ou administrador | Cancela reserva confirmada. |
-| `GET` | `/api/loans?active=true` | usuário autenticado | Lista empréstimos; usuário vê os próprios, admin vê todos. |
-| `POST` | `/api/device/events` | ESP32 autenticado | Registra retirada ou devolução pelo RFID. |
+| `GET` | `/api/loans?active=true` | usuário autenticado | Lista empréstimos; usuário vê os próprios, admin vê todos. Com `active=false` lista também os já devolvidos. |
+| `POST` | `/api/device/events` | ESP32 autenticado | Registro direto de retirada ou devolução pelo RFID (fluxo antigo, mantido). |
 
 ## Exemplos de chamadas
 
@@ -249,9 +267,26 @@ curl -X POST http://raspberrypi:5000/api/reservations \
   -d '{"key_id":1,"title":"Aula de Física","starts_at":"2026-11-20T13:00:00Z","ends_at":"2026-11-20T14:00:00Z"}'
 ```
 
-## E o LED de reserva?
+## Totem, sessão física e sensores
 
-As rotas atuais permitem que o site consulte as reservas, mas ainda não existe uma rota exclusiva para o ESP32 consultar a agenda usando o token do dispositivo. Para o LED refletir reservas novas, alteradas ou canceladas, o firmware precisará consultar periodicamente uma rota de agenda do dispositivo (polling). Essa rota ainda precisa ser implementada. A consulta pode retornar o estado atual e as próximas reservas de cada chave; assim o ESP32 não precisa manter uma conexão aberta.
+Fluxo: o cartão passa no leitor, o ESP32 chama `POST /api/device/card` e a API abre uma **sessão física** (passar o mesmo cartão de novo, o botão Encerrar do totem ou a inatividade encerram). Durante a sessão o totem escolhe retirar ou devolver e confirma as chaves. Os **reeds** (um por chave) são a fonte de verdade: ímã saindo é retirada, voltando é devolução. Mudança de reed sem sessão ativa vira retirada sem autorização (`unauthorized`), que aparece como alerta no painel.
+
+Autenticação: ESP32 usa `X-Device-Token`; o totem usa `X-Terminal-Token`; o site usa JWT.
+
+| Método | Rota | Quem usa | Função |
+|---|---|---|---|
+| `POST` | `/api/device/card` | ESP32 | Cartão lido: abre ou encerra a sessão (`event_id` único). |
+| `GET` | `/api/device/poll` | ESP32 | Estado da sessão, comando da porta e cor/pisca de cada LED. Consultado a cada ~1 s. |
+| `POST` | `/api/device/reeds` | ESP32 | Mudanças dos reeds (`event_id`, `sensor_id`, presente ou ausente, horário). |
+| `GET` | `/api/totem/session` | totem | Sessão ativa e tempo restante. |
+| `POST` | `/api/totem/mode` | totem | Escolhe retirar ou devolver. |
+| `POST` | `/api/totem/take` | totem | Confirma as chaves escolhidas (`key_ids`); libera a porta. |
+| `POST` | `/api/totem/activity` | totem | Renova a inatividade. |
+| `POST` | `/api/totem/end` | totem | Encerra a sessão. |
+| `GET` | `/api/keys/status` | site (JWT) | Estado completo das chaves. |
+| `GET` | `/api/reed-events?limit=` | administrador | Histórico dos eventos dos sensores (até 500). |
+
+Tabelas novas (criadas pelo `init-db`): `physical_sessions` e `reed_events`. Cores dos LEDs, calculadas pela API: verde (presente e livre), vermelho (ausente), amarelo (presente e reservada por outro), piscando (chave escolhida ou reservada para quem está logado).
 
 ## O que este projeto não faz
 
